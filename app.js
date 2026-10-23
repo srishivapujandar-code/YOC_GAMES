@@ -170,15 +170,6 @@ class YocGamesApp {
       });
     });
 
-    // Final Submit Button
-    const btnFinalSubmit = document.getElementById('btn-final-submit');
-    if (btnFinalSubmit) {
-      btnFinalSubmit.addEventListener('click', () => {
-        sound.playClick();
-        this.submitScoresToGoogleForm({ auto: false, force: true });
-      });
-    }
-
     // Reset Tournament / Register New Team
     const btnNewTeam = document.getElementById('btn-reset-team');
     if (btnNewTeam) {
@@ -406,7 +397,7 @@ class YocGamesApp {
       // Strictly only submit at the final when ALL 4 games are complete!
       if (this.allGamesCompleted() && !this.state.submitted) {
         setTimeout(() => {
-          this.submitScoresToGoogleForm({ auto: true });
+          this.submitScoresToGoogleForm();
         }, 500);
       }
     }
@@ -436,9 +427,6 @@ class YocGamesApp {
 
     // Update Google Form DOM fields
     this.populateGoogleFormDOM();
-
-    // Update submission UI status
-    this.updateSubmissionStatusUI(this.state.submitted ? 'success' : 'idle');
   }
 
   populateGoogleFormDOM() {
@@ -472,66 +460,27 @@ class YocGamesApp {
     setInput(e.g4, s.g4 ?? 0);
   }
 
-  updateSubmissionStatusUI(status) {
-    const card = document.getElementById('final-submit-status');
-    const icon = document.getElementById('submit-status-icon');
-    const title = document.getElementById('submit-status-title');
-    const desc = document.getElementById('submit-status-desc');
-    const btn = document.getElementById('btn-final-submit');
-
-    if (!card) return;
-
-    card.classList.remove('status-submitting', 'status-success', 'status-idle');
-
-    if (status === 'submitting') {
-      card.classList.add('status-submitting');
-      if (icon) icon.textContent = '⏳';
-      if (title) title.textContent = 'Recording Scores...';
-      if (desc) desc.textContent = 'Transmitting official scores to tournament Google Sheet...';
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span>⏳ Transmitting to Sheet...</span>';
-      }
-    } else if (status === 'success') {
-      card.classList.add('status-success');
-      if (icon) icon.textContent = '✅';
-      if (title) title.textContent = 'Scores Recorded in Google Sheet!';
-      const timeStr = this.state.submissionTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      if (desc) desc.textContent = `Officially verified & logged in tournament sheet (${timeStr}).`;
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<span>🏆 Scores Recorded (Tap to Re-submit)</span>';
-      }
-    } else {
-      card.classList.add('status-idle');
-      if (icon) icon.textContent = '📋';
-      if (title) title.textContent = 'Ready for Official Submission';
-      if (desc) desc.textContent = 'All 4 games completed. Tap below to confirm and submit.';
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<span>🏆 Submit Final Score to Leaderboard</span>';
-      }
-    }
-  }
-
-  async submitScoresToGoogleForm({ auto = true, force = false } = {}) {
-    // Only submit at the final when ALL 4 games are complete unless forced
-    if (!this.allGamesCompleted() && !force) {
+  async submitScoresToGoogleForm() {
+    // Strictly only submit at the final when ALL 4 games are complete!
+    if (!this.allGamesCompleted()) {
       console.warn("Google Form submission aborted: All 4 games must be completed first.");
       return;
     }
 
-    if (this.state.submitted && auto && !force) {
+    if (this.state.submitted) {
       console.log("Google Form submission already recorded for this tournament run.");
-      this.updateSubmissionStatusUI('success');
       return;
     }
+
+    // Set submitted immediately to prevent duplicate or multiple submissions
+    this.state.submitted = true;
+    this.state.submissionTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    this.saveState();
 
     const form = document.getElementById('mG61Hd');
     if (!form) return;
 
     this.populateGoogleFormDOM();
-    this.updateSubmissionStatusUI('submitting');
 
     const formData = new FormData(form);
     const urlParams = new URLSearchParams();
@@ -540,34 +489,22 @@ class YocGamesApp {
     }
 
     try {
-      // 1. Submit via hidden layout-attached iframe (guaranteed native form urlencoded POST)
-      form.target = 'gform_sink';
-      form.submit();
-
-      // 2. Fetch POST with URLSearchParams directly as body (ensures application/x-www-form-urlencoded in Fetch standard)
+      // Exactly ONE transmission: Send via fetch POST with URLSearchParams
       await fetch(GOOGLE_FORM_CONFIG.actionUrl, {
         method: 'POST',
         mode: 'no-cors',
         body: urlParams
       });
 
-      // 3. navigator.sendBeacon background delivery channel
-      if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
-        navigator.sendBeacon(GOOGLE_FORM_CONFIG.actionUrl, urlParams);
-      }
-
-      this.state.submitted = true;
-      this.state.submissionTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      this.saveState();
-      this.updateSubmissionStatusUI('success');
-      this.announce("All 4 games completed. Tournament scores successfully recorded.");
+      this.announce("All 4 games completed. Tournament scores officially recorded in Google Sheet.");
     } catch (err) {
-      console.error("Submission error:", err);
-      // DOM form submission already dispatched to iframe
-      this.state.submitted = true;
-      this.state.submissionTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      this.saveState();
-      this.updateSubmissionStatusUI('success');
+      console.error("Fetch submission error, attempting DOM fallback:", err);
+      try {
+        form.target = 'gform_sink';
+        form.submit();
+      } catch (domErr) {
+        console.error("DOM form submit error:", domErr);
+      }
     }
   }
 
