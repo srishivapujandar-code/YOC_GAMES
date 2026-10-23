@@ -112,101 +112,117 @@ body {
   z-index: 100;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  background: rgba(10, 14, 23, 0.85);
+  background: rgba(10, 14, 23, 0.95);
   border-bottom: 1px solid var(--border-color);
-  padding: 12px 24px;
+  padding: 5px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .nav-container {
-  max-width: 1280px;
-  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
 }
 
 .brand-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   cursor: pointer;
   text-decoration: none;
+  flex-shrink: 0;
 }
 
 .brand-icon {
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   background: linear-gradient(135deg, var(--cyan-neon), var(--purple-neon));
-  border-radius: 10px;
+  border-radius: 6px;
   display: grid;
   place-items: center;
-  box-shadow: 0 0 15px var(--cyan-glow);
+  box-shadow: 0 0 8px var(--cyan-glow);
 }
 
 .brand-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 13px;
+  height: 13px;
   fill: #fff;
 }
 
 .brand-title {
-  font-size: 1.25rem;
+  font-size: 0.95rem;
   font-weight: 900;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   color: #fff;
-}
-
-.brand-subtitle {
-  font-size: 0.72rem;
-  color: var(--cyan-neon);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  white-space: nowrap;
 }
 
 .team-chip {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-color);
-  padding: 6px 14px;
+  padding: 2px 8px;
   border-radius: var(--radius-full);
+  min-width: 0;
+  flex: 1;
+  max-width: 190px;
 }
 
 .team-badge-icon {
-  font-size: 1.1rem;
+  font-size: 0.8rem;
+  flex-shrink: 0;
 }
 
 .team-details {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  line-height: 1.1;
 }
 
 .team-name-label {
-  font-size: 0.85rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .team-members-label {
-  font-size: 0.72rem;
+  font-size: 0.64rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Scores Strip */
+/* Scores Strip - Row 2 Ultra-Compact */
 .score-ticker-strip {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--border-color);
-  padding: 4px 12px;
+  padding: 2px 8px;
   border-radius: var(--radius-full);
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-family: var(--font-mono);
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.score-ticker-strip::-webkit-scrollbar {
+  display: none;
 }
 
 .ticker-item {
@@ -216,7 +232,8 @@ body {
   color: var(--cyan-neon);
 }
 .ticker-sep {
-  color: var(--border-color);
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.65rem;
 }
 .ticker-total {
   color: var(--emerald-neon);
@@ -224,27 +241,28 @@ body {
 }
 .ticker-total strong {
   color: var(--emerald-neon);
-  font-size: 0.9rem;
+  font-size: 0.74rem;
 }
 
 /* Navigation buttons */
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-shrink: 0;
 }
 
 .btn-icon {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-color);
   color: var(--text-main);
-  width: 36px;
-  height: 36px;
+  width: 26px;
+  height: 26px;
   border-radius: var(--radius-sm);
   display: grid;
   place-items: center;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 0.8rem;
 }
 .btn-icon:hover {
   background: rgba(255, 255, 255, 0.1);
@@ -303,6 +321,14 @@ body {
   content: " ✓";
   font-weight: 800;
 }
+.station-tab.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.station-tab.locked:hover {
+  background: transparent;
+  color: var(--text-muted);
+}
 
 /* ==========================================================================
    Main Content Layout
@@ -327,28 +353,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.desktop-mobile-banner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(90deg, rgba(0, 242, 254, 0.15), rgba(168, 85, 247, 0.15));
-  border-bottom: 1px solid var(--border-color);
-  padding: 6px 12px;
-  font-size: 0.76rem;
-  color: var(--cyan-neon);
-  text-align: center;
-  letter-spacing: 0.5px;
-}
-
 @media (max-width: 540px) {
   .mobile-frame-wrapper {
     max-width: 100%;
     border-left: none;
     border-right: none;
     box-shadow: none;
-  }
-  .desktop-mobile-banner {
-    display: none;
   }
 }
 
@@ -1541,26 +1551,22 @@ body {
   }
 
   .yoc-navbar {
-    padding: 8px 12px;
+    padding: 5px 8px;
   }
 
   .nav-container {
-    gap: 8px;
+    gap: 6px;
   }
 
   .brand-title {
-    font-size: 1.1rem;
-  }
-
-  .brand-subtitle {
-    font-size: 0.65rem;
+    font-size: 0.92rem;
   }
 
   /* Score ticker compact and scrollable */
   .score-ticker-strip {
-    font-size: 0.74rem;
-    padding: 4px 10px;
-    gap: 6px;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    gap: 5px;
     max-width: 100%;
     overflow-x: auto;
     white-space: nowrap;

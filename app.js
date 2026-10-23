@@ -108,6 +108,7 @@ class YocGamesApp {
     this.updateAudioButtonUI();
     this.updateHUDProfile();
     this.updateHUDScoreStrip();
+    this.updateNavTabs();
 
     // Check if team is already registered
     if (this.state.registered) {
@@ -272,16 +273,33 @@ class YocGamesApp {
     }
 
     // Update Station Nav Tabs
-    document.querySelectorAll('.station-tab').forEach(tab => {
-      tab.classList.toggle('active', tab.dataset.screen === screenId);
-      const gameKey = tab.dataset.game;
-      if (gameKey && this.state.scores[gameKey] > 0) {
-        tab.classList.add('completed-tab');
-      }
-    });
+    this.updateNavTabs(screenId);
 
     // Launch appropriate game module
     this.launchScreenModule(screenId);
+  }
+
+  updateNavTabs(screenId = this.state.currentScreen) {
+    const tabFinal = document.getElementById('tab-final');
+    if (tabFinal) {
+      if (this.allGamesCompleted()) {
+        tabFinal.innerHTML = '🏆 <span>Final Score & Submit</span>';
+        tabFinal.classList.remove('locked');
+        tabFinal.title = 'View Final Score & Submit';
+      } else {
+        tabFinal.innerHTML = '🔒 <span>Final Score & Submit</span>';
+        tabFinal.classList.add('locked');
+        tabFinal.title = 'Complete all 4 games to unlock Final Score & Submit';
+      }
+    }
+
+    document.querySelectorAll('.station-tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.screen === screenId);
+      const gameKey = tab.dataset.game;
+      if (gameKey && this.state.completedGames && this.state.completedGames[gameKey]) {
+        tab.classList.add('completed-tab');
+      }
+    });
   }
 
   launchScreenModule(screenId) {

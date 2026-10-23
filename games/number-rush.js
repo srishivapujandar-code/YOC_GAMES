@@ -379,8 +379,8 @@ export class NumberRushGame {
       finishBtn.textContent = 'Advance to Level 3 (Emoji Decoders) →';
     } else {
       modalTitle.textContent = timeout ? 'Game 4 Time Expired' : 'Game 4 Completed! All 3 Levels Solved!';
-      modalDesc.textContent = `Final Game 4 Score: ${this.totalScore} pts across all 3 progressive levels!`;
-      finishBtn.textContent = 'View Final Tournament Scoreboard 🏆';
+      modalDesc.textContent = `All 4 games complete! Total Game 4 Score: ${this.totalScore} pts.`;
+      finishBtn.textContent = 'Proceed to Final Score & Submit 🏆';
     }
 
     dialog.showModal();

@@ -41,59 +41,51 @@
   <canvas id="confetti-canvas" aria-hidden="true"></canvas>
 
   <div class="mobile-frame-wrapper">
-    <!-- Desktop helper banner (hidden on mobile viewports) -->
-    <div class="desktop-mobile-banner">
-      <span>📱 <strong>Mobile Tournament Mode</strong> • Optimized for smartphone touchscreens</span>
-    </div>
-
     <!-- ========================================================================
-         Top Navigation Bar
+         Top Navigation Bar (Compressed & Ultra-Slim)
          ======================================================================== -->
     <header class="yoc-navbar" role="banner">
-    <div class="nav-container">
-      <!-- Branding -->
-      <a href="#" class="brand-wrapper" id="nav-brand" title="YOC GAMES Arena">
-        <div class="brand-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M13 2L3 14h7v8l10-12h-7z"/>
-          </svg>
-        </div>
-        <div class="brand-text">
-          <div class="brand-title">YOC GAMES</div>
-          <div class="brand-subtitle">Tournament Arena</div>
-        </div>
-      </a>
+      <div class="nav-container">
+        <!-- Branding -->
+        <a href="#" class="brand-wrapper" id="nav-brand" title="YOC GAMES Arena">
+          <div class="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M13 2L3 14h7v8l10-12h-7z"/>
+            </svg>
+          </div>
+          <span class="brand-title">YOC GAMES</span>
+        </a>
 
-      <!-- Registered Team Badge -->
-      <div class="team-chip" id="nav-team-chip" style="display: none;" role="region" aria-label="Active Team Profile">
-        <span class="team-badge-icon" aria-hidden="true">👥</span>
-        <div class="team-details">
-          <span class="team-name-label" id="nav-team-name">Team Name</span>
-          <span class="team-members-label" id="nav-team-members">Player 1 & Player 2</span>
+        <!-- Registered Team Badge -->
+        <div class="team-chip" id="nav-team-chip" style="display: none;" role="region" aria-label="Active Team Profile">
+          <span class="team-badge-icon" aria-hidden="true">👥</span>
+          <div class="team-details">
+            <span class="team-name-label" id="nav-team-name">Team</span>
+            <span class="team-members-label" id="nav-team-members">P1 & P2</span>
+          </div>
+        </div>
+
+        <!-- Sound & Accessibility Actions -->
+        <div class="nav-actions">
+          <button class="btn-icon" id="btn-sound-toggle" type="button" title="Toggle Game Audio" aria-label="Toggle game audio">
+            🔊
+          </button>
         </div>
       </div>
 
-      <!-- Live Scores Ticker -->
+      <!-- Live Scores Ticker (Compact Strip) -->
       <div class="score-ticker-strip" role="region" aria-label="Live Game Scores">
         <span class="ticker-item">G1: <strong id="hud-g1-score">0</strong></span>
-        <span class="ticker-sep" aria-hidden="true">|</span>
+        <span class="ticker-sep" aria-hidden="true">·</span>
         <span class="ticker-item">G2: <strong id="hud-g2-score">0</strong></span>
-        <span class="ticker-sep" aria-hidden="true">|</span>
+        <span class="ticker-sep" aria-hidden="true">·</span>
         <span class="ticker-item">G3: <strong id="hud-g3-score">0</strong></span>
-        <span class="ticker-sep" aria-hidden="true">|</span>
+        <span class="ticker-sep" aria-hidden="true">·</span>
         <span class="ticker-item">G4: <strong id="hud-g4-score">0</strong></span>
-        <span class="ticker-sep" aria-hidden="true">|</span>
+        <span class="ticker-sep" aria-hidden="true">·</span>
         <span class="ticker-total">TOTAL: <strong id="hud-total-score">0</strong></span>
       </div>
-
-      <!-- Sound & Accessibility Actions -->
-      <div class="nav-actions">
-        <button class="btn-icon" id="btn-sound-toggle" type="button" title="Toggle Game Audio" aria-label="Toggle game audio">
-          🔊
-        </button>
-      </div>
-    </div>
-  </header>
+    </header>
 
   <!-- ========================================================================
        Station Navigation Tabs
@@ -115,8 +107,8 @@
       <button class="station-tab" data-screen="screen-game4" data-game="g4" type="button">
         🎯 <span>Game 4: Number Rush</span>
       </button>
-      <button class="station-tab" data-screen="screen-final" type="button">
-        🏆 <span>Final Scoreboard</span>
+      <button class="station-tab locked" id="tab-final" data-screen="screen-final" type="button" title="Unlocks after completing all 4 games">
+        🔒 <span>Final Score & Submit</span>
       </button>
     </div>
   </nav>
