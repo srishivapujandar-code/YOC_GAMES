@@ -1,0 +1,27 @@
+# Strictly ignore all ZIP archives
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Dependencies & build outputs
+node_modules/
+.vercel
+dist/
+build/
+
+# Operating System & Editor Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Logs & Diagnostics
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

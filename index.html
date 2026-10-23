@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>YOC GAMES • Official Multi-Game Tournament Arena</title>
+  <meta name="description" content="Official YOC Games tournament platform featuring Code Breaker, Patches Spatial Logic, Zip Challenge, and Number Rush.">
+  <meta name="theme-color" content="#0a0e17">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="YOC GAMES">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+
+  <!-- Mobile Landscape Orientation Blocker -->
+  <div id="landscape-blocker" class="landscape-blocker" aria-hidden="true">
+    <div class="landscape-card">
+      <div class="rotate-phone-anim">📱</div>
+      <h3>Rotate Device to Portrait</h3>
+      <p>YOC GAMES tournament is played in portrait mode on mobile devices.</p>
+    </div>
+  </div>
+
+  <!-- Screen Reader Live Announcements Region -->
+  <div id="sr-announcements" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Skip Navigation for Accessibility -->
+  <a href="#main-content" class="skip-link">Skip to Main Content</a>
+
+  <!-- Fullscreen Celebration Confetti Canvas -->
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <div class="mobile-frame-wrapper">
+    <!-- Desktop helper banner (hidden on mobile viewports) -->
+    <div class="desktop-mobile-banner">
+      <span>📱 <strong>Mobile Tournament Mode</strong> • Optimized for smartphone touchscreens</span>
+    </div>
+
+    <!-- ========================================================================
+         Top Navigation Bar
+         ======================================================================== -->
+    <header class="yoc-navbar" role="banner">
+    <div class="nav-container">
+      <!-- Branding -->
+      <a href="#" class="brand-wrapper" id="nav-brand" title="YOC GAMES Arena">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M13 2L3 14h7v8l10-12h-7z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">YOC GAMES</div>
+          <div class="brand-subtitle">Tournament Arena</div>
+        </div>
+      </a>
+
+      <!-- Registered Team Badge -->
+      <div class="team-chip" id="nav-team-chip" style="display: none;" role="region" aria-label="Active Team Profile">
+        <span class="team-badge-icon" aria-hidden="true">👥</span>
+        <div class="team-details">
+          <span class="team-name-label" id="nav-team-name">Team Name</span>
+          <span class="team-members-label" id="nav-team-members">Player 1 & Player 2</span>
+        </div>
+      </div>
+
+      <!-- Live Scores Ticker -->
+      <div class="score-ticker-strip" role="region" aria-label="Live Game Scores">
+        <span class="ticker-item">G1: <strong id="hud-g1-score">0</strong></span>
+        <span class="ticker-sep" aria-hidden="true">|</span>
+        <span class="ticker-item">G2: <strong id="hud-g2-score">0</strong></span>
+        <span class="ticker-sep" aria-hidden="true">|</span>
+        <span class="ticker-item">G3: <strong id="hud-g3-score">0</strong></span>
+        <span class="ticker-sep" aria-hidden="true">|</span>
+        <span class="ticker-item">G4: <strong id="hud-g4-score">0</strong></span>
+        <span class="ticker-sep" aria-hidden="true">|</span>
+        <span class="ticker-total">TOTAL: <strong id="hud-total-score">0</strong></span>
+      </div>
+
+      <!-- Sound & Accessibility Actions -->
+      <div class="nav-actions">
+        <button class="btn-icon" id="btn-sound-toggle" type="button" title="Toggle Game Audio" aria-label="Toggle game audio">
+          🔊
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       Station Navigation Tabs
+       ======================================================================== -->
+  <nav class="station-nav-bar" aria-label="Game Station Selector">
+    <div class="station-tabs-wrap">
+      <button class="station-tab active" data-screen="screen-registration" type="button">
+        📋 <span>Registration</span>
+      </button>
+      <button class="station-tab" data-screen="screen-game1" data-game="g1" type="button">
+        🧠 <span>Game 1: Code Breaker</span>
+      </button>
+      <button class="station-tab" data-screen="screen-game2" data-game="g2" type="button">
+        🧩 <span>Game 2: Patches</span>
+      </button>
+      <button class="station-tab" data-screen="screen-game3" data-game="g3" type="button">
+        ⚡ <span>Game 3: Zip</span>
+      </button>
+      <button class="station-tab" data-screen="screen-game4" data-game="g4" type="button">
+        🎯 <span>Game 4: Number Rush</span>
+      </button>
+      <button class="station-tab" data-screen="screen-final" type="button">
+        🏆 <span>Final Score & Submit</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========================================================================
+       Main Content Container
+       ======================================================================== -->
+  <main class="app-main" id="main-content" role="main">
+
+    <!-- ----------------------------------------------------------------------
+         SCREEN 1: REGISTRATION & INITIAL SCOREBOARD
+         ---------------------------------------------------------------------- -->
+    <section id="screen-registration" class="screen-section active" aria-labelledby="reg-heading">
+      <div class="hero-banner">
+        <span class="hero-pill">⚡ OFFICIAL EVENT ENTRY</span>
+        <h1 class="hero-title" id="reg-heading">Welcome to <span class="gradient-text">YOC GAMES</span></h1>
+        <p class="hero-subtitle">Enter your team and player details to begin the 4-game tournament challenge. Play each round sequentially or explore game stations!</p>
+      </div>
+
+      <div class="panel-card">
+        <form id="form-registration" novalidate>
+          <div class="form-layout-grid">
+            <!-- Team Name -->
+            <div class="form-group full-width">
+              <label for="reg-team-name" class="form-label">
+                Team Name <span class="req-star" aria-hidden="true">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="reg-team-name" 
+                name="team_name" 
+                class="form-input" 
+                placeholder="e.g. Apex Predators" 
+                required 
+                aria-required="true"
+                autocomplete="organization"
+              />
+              <span class="form-hint">Unique team or squad identifier.</span>
+            </div>
+
+            <!-- Player 1 Name -->
+            <div class="form-group">
+              <label for="reg-name1" class="form-label">
+                Player 1 Name (name1) <span class="req-star" aria-hidden="true">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="reg-name1" 
+                name="name1" 
+                class="form-input" 
+                placeholder="e.g. Aarav Sharma" 
+                required 
+                aria-required="true"
+                autocomplete="name"
+              />
+            </div>
+
+            <!-- Player 2 Name -->
+            <div class="form-group">
+              <label for="reg-name2" class="form-label">
+                Player 2 Name (name2) <span class="req-star" aria-hidden="true">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="reg-name2" 
+                name="name2" 
+                class="form-input" 
+                placeholder="e.g. Meera Patel" 
+                required 
+                aria-required="true"
+                autocomplete="name"
+              />
+            </div>
+
+            <!-- Roll No 1 -->
+            <div class="form-group">
+              <label for="reg-roll1" class="form-label">
+                Roll No 1 (roll no1) <span class="req-star" aria-hidden="true">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="reg-roll1" 
+                name="roll1" 
+                class="form-input" 
+                placeholder="25u201" 
+                required 
+                aria-required="true"
+              />
+            </div>
+
+            <!-- Roll No 2 -->
+            <div class="form-group">
+              <label for="reg-roll2" class="form-label">
+                Roll No 2 (roll no2) <span class="req-star" aria-hidden="true">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="reg-roll2" 
+                name="roll2" 
+                class="form-input" 
+                placeholder="25u201" 
+                required 
+                aria-required="true"
+              />
+            </div>
+
+            <!-- Phone Number -->
+            <div class="form-group full-width">
+              <label for="reg-phone" class="form-label">
+                Contact Phone Number (phone no1) <span class="req-star" aria-hidden="true">*</span>
+              </label>
+              <input 
+                type="tel" 
+                id="reg-phone" 
+                name="phone" 
+                class="form-input" 
+                placeholder="e.g. 9876543210" 
+                required 
+                aria-required="true"
+                autocomplete="tel"
+              />
+              <span class="form-hint">Used for verification and tournament prize notifications.</span>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 12px;">
+            <button type="submit" class="btn btn-primary btn-glow btn-lg full-width">
+              <span>START TO PLAY →</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------------------------
+         SCREEN 2: GAME 1 - CODE BREAKER
+         ---------------------------------------------------------------------- -->
+    <section id="screen-game1" class="screen-section" aria-label="Game 1 Code Breaker">
+      <div id="game1-mount"></div>
+    </section>
+
+    <!-- ----------------------------------------------------------------------
+         SCREEN 3: GAME 2 - PATCHES PUZZLE
+         ---------------------------------------------------------------------- -->
+    <section id="screen-game2" class="screen-section" aria-label="Game 2 Patches Puzzle">
+      <div id="game2-mount"></div>
+    </section>
+
+    <!-- ----------------------------------------------------------------------
+         SCREEN 4: GAME 3 - ZIP CHALLENGE
+         ---------------------------------------------------------------------- -->
+    <section id="screen-game3" class="screen-section" aria-label="Game 3 Zip Challenge">
+      <div id="game3-mount"></div>
+    </section>
+
+    <!-- ----------------------------------------------------------------------
+         SCREEN 5: GAME 4 - NUMBER RUSH & EMOJI MYSTERY
+         ---------------------------------------------------------------------- -->
+    <section id="screen-game4" class="screen-section" aria-label="Game 4 Number Rush">
+      <div id="game4-mount"></div>
+    </section>
+
+    <!-- ----------------------------------------------------------------------
+         SCREEN 6: FINAL SCOREBOARD & GOOGLE FORM SUBMISSION
+         ---------------------------------------------------------------------- -->
+    <section id="screen-final" class="screen-section" aria-labelledby="final-heading">
+      <div class="hero-banner">
+        <span class="hero-pill">🏆 TOURNAMENT RESULTS</span>
+        <h1 class="hero-title" id="final-heading">Final Tournament Scoreboard</h1>
+        <p class="hero-subtitle">Congratulations on finishing all games! Review your final scores and submit them directly to the official Google Form database.</p>
+      </div>
+
+      <div class="final-scoreboard-card">
+        <!-- Grand Total Banner -->
+        <div class="grand-total-banner">
+          <div class="grand-total-label">Combined Final Score</div>
+          <div class="grand-total-val" id="final-grand-total">0</div>
+          <p class="text-sm text-muted">Sum of Game 1, Game 2, Game 3, and Game 4 points</p>
+        </div>
+
+        <!-- Scores Breakdown Table -->
+        <table class="breakdown-table" aria-label="Score Breakdown by Game">
+          <thead>
+            <tr>
+              <th scope="col">Game</th>
+              <th scope="col">Description</th>
+              <th scope="col">Score ID</th>
+              <th scope="col">Score Earned</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Game 1: Code Breaker</strong></td>
+              <td class="text-muted">Numeric logic deduction</td>
+              <td><code>g1</code></td>
+              <td class="score-cell" id="final-g1-score">0</td>
+            </tr>
+            <tr>
+              <td><strong>Game 2: Patches</strong></td>
+              <td class="text-muted">Spatial grid rectangle tiling</td>
+              <td><code>g2</code></td>
+              <td class="score-cell" id="final-g2-score">0</td>
+            </tr>
+            <tr>
+              <td><strong>Game 3: Zip</strong></td>
+              <td class="text-muted">Continuous Hamiltonian checkpoint path</td>
+              <td><code>g3</code></td>
+              <td class="score-cell" id="final-g3-score">0</td>
+            </tr>
+            <tr>
+              <td><strong>Game 4: Number Rush</strong></td>
+              <td class="text-muted">Reflex sequence & emoji decoding</td>
+              <td><code>g4</code></td>
+              <td class="score-cell" id="final-g4-score">0</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Team Summary Details -->
+        <div class="team-summary-box">
+          <div class="team-summary-grid">
+            <div>
+              <div class="summary-field-title">Team Name</div>
+              <div class="summary-field-val" id="sum-team-name">—</div>
+            </div>
+            <div>
+              <div class="summary-field-title">Player 1 Name (name1)</div>
+              <div class="summary-field-val" id="sum-name1">—</div>
+            </div>
+            <div>
+              <div class="summary-field-title">Player 1 Roll No (roll no1)</div>
+              <div class="summary-field-val" id="sum-roll1">—</div>
+            </div>
+            <div>
+              <div class="summary-field-title">Player 2 Name (name2)</div>
+              <div class="summary-field-val" id="sum-name2">—</div>
+            </div>
+            <div>
+              <div class="summary-field-title">Player 2 Roll No (roll no2)</div>
+              <div class="summary-field-val" id="sum-roll2">—</div>
+            </div>
+            <div>
+              <div class="summary-field-title">Phone Number (phone no1)</div>
+              <div class="summary-field-val" id="sum-phone">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Google Form API Auto-Submission Section -->
+        <div class="submit-api-box" id="submit-api-panel">
+          <div class="api-box-header">
+            <span class="api-tag">⚡ GOOGLE FORM INTEGRATION</span>
+            <h3 style="margin-top: 6px;">Automatic Form Submission</h3>
+            <p class="text-sm text-muted" style="margin: 6px 0 14px;">
+              Your team credentials and game scores (team name, name1, name2, roll no1, roll no2, phone no1, g1, g2, g3, g4) are automatically submitted to the Google Form database.
+            </p>
+          </div>
+
+          <div id="submission-status-box" role="status" aria-live="polite">
+            <div class="submission-status-badge auto-submitting">
+              <span>⏳ Auto-submitting tournament scores to Google Form...</span>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary full-width" id="btn-submit-google-form" type="button" style="margin-top: 14px;">
+            <span>↻ Re-Submit / Sync with Google Form</span>
+          </button>
+        </div>
+
+        <!-- Tournament Controls Footer -->
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-secondary" id="btn-reset-team" type="button">
+            ↻ Register New Team / Reset Arena
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  </div><!-- /.mobile-frame-wrapper -->
+
+  <!-- ========================================================================
+       Hidden Google Form DOM & Target Iframe (From data.md)
+       Used for guaranteed API submission without navigating away.
+       ======================================================================== -->
+  <iframe name="gform_sink" id="gform_sink" style="display:none;" title="Google Form Sink" aria-hidden="true" tabindex="-1"></iframe>
+
+  <form 
+    action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSf42vQBG3sz8M6FqKmtp1c6cicpbz0e2g6KVANuGanOypBCww/formResponse" 
+    target="gform_sink" 
+    method="POST" 
+    id="mG61Hd" 
+    style="display:none;" 
+    aria-hidden="true"
+    tabindex="-1">
+    
+    <!-- Hidden Entries from data.md -->
+    <input type="hidden" name="entry.2005620554" value=""><!-- team name -->
+    <input type="hidden" name="entry.760206339" value=""><!-- name1 -->
+    <input type="hidden" name="entry.2064043736" value=""><!-- name2 -->
+    <input type="hidden" name="entry.2095619319" value=""><!-- roll no1 -->
+    <input type="hidden" name="entry.84977519" value=""><!-- roll no2 -->
+    <input type="hidden" name="entry.1115565979" value=""><!-- phone no1 -->
+    <input type="hidden" name="entry.231797246" value=""><!-- g1 -->
+    <input type="hidden" name="entry.1866105115" value=""><!-- g2 -->
+    <input type="hidden" name="entry.892273308" value=""><!-- g3 -->
+    <input type="hidden" name="entry.921971514" value=""><!-- g4 -->
+
+    <!-- Form metadata -->
+    <input type="hidden" name="fvv" value="1">
+    <input type="hidden" name="pageHistory" value="0">
+    <input type="hidden" name="fbzx" value="-3419578873572109492">
+    <input type="hidden" name="submissionTimestamp" value="-1">
+  </form>
+
+</body>
+</html>
