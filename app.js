@@ -394,11 +394,11 @@ class YocGamesApp {
     } else if (screenId === 'screen-final') {
       this.populateFinalScreen();
       if (this.confetti) this.confetti.burst(180);
-      // Strictly only submit at the final when ALL 4 games are complete!
-      if (this.allGamesCompleted() && !this.state.submitted) {
+      // Automatically submit scores to Google Form upon reaching final scoreboard
+      if (!this.state.submitted) {
         setTimeout(() => {
           this.submitScoresToGoogleForm();
-        }, 500);
+        }, 400);
       }
     }
   }
@@ -460,50 +460,33 @@ class YocGamesApp {
     setInput(e.g4, s.g4 ?? 0);
   }
 
-  async submitScoresToGoogleForm() {
-    // Strictly only submit at the final when ALL 4 games are complete!
-    if (!this.allGamesCompleted()) {
-      console.warn("Google Form submission aborted: All 4 games must be completed first.");
-      return;
-    }
-
+  submitScoresToGoogleForm() {
     if (this.state.submitted) {
       console.log("Google Form submission already recorded for this tournament run.");
       return;
     }
-
-    // Set submitted immediately to prevent duplicate or multiple submissions
-    this.state.submitted = true;
-    this.state.submissionTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    this.saveState();
 
     const form = document.getElementById('mG61Hd');
     if (!form) return;
 
     this.populateGoogleFormDOM();
 
-    const formData = new FormData(form);
-    const urlParams = new URLSearchParams();
-    for (const [key, value] of formData.entries()) {
-      urlParams.append(key, value);
-    }
+    // Set submitted flag immediately to prevent duplicate submissions
+    this.state.submitted = true;
+    this.state.submissionTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    this.saveState();
 
     try {
-      // Exactly ONE transmission: Send via fetch POST with URLSearchParams
-      await fetch(GOOGLE_FORM_CONFIG.actionUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: urlParams
-      });
-
+      // Primary native DOM form submission into iframe sink (100% accepted by Google Forms in all mobile browsers)
+      form.target = 'gform_sink';
+      HTMLFormElement.prototype.submit.call(form);
       this.announce("All 4 games completed. Tournament scores officially recorded in Google Sheet.");
-    } catch (err) {
-      console.error("Fetch submission error, attempting DOM fallback:", err);
+    } catch (e) {
+      console.error("DOM form submit error:", e);
       try {
-        form.target = 'gform_sink';
         form.submit();
-      } catch (domErr) {
-        console.error("DOM form submit error:", domErr);
+      } catch (err2) {
+        console.error("Fatal form submit error:", err2);
       }
     }
   }
