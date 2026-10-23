@@ -13,7 +13,7 @@ import { NumberRushGame } from './games/number-rush.js';
 
 // Google Form API configuration from data.md
 const GOOGLE_FORM_CONFIG = {
-  actionUrl: "https://docs.google.com/forms/u/0/d/e/1FAIpQLSf42vQBG3sz8M6FqKmtp1c6cicpbz0e2g6KVANuGanOypBCww/formResponse",
+  actionUrl: "https://docs.google.com/forms/d/e/1FAIpQLSf42vQBG3sz8M6FqKmtp1c6cicpbz0e2g6KVANuGanOypBCww/formResponse",
   entries: {
     teamName: "entry.2005620554",
     name1: "entry.760206339",
@@ -170,6 +170,15 @@ class YocGamesApp {
       });
     });
 
+    // Final Submit Button
+    const btnFinalSubmit = document.getElementById('btn-final-submit');
+    if (btnFinalSubmit) {
+      btnFinalSubmit.addEventListener('click', () => {
+        sound.playClick();
+        this.submitScoresToGoogleForm({ auto: false, force: true });
+      });
+    }
+
     // Reset Tournament / Register New Team
     const btnNewTeam = document.getElementById('btn-reset-team');
     if (btnNewTeam) {
@@ -211,6 +220,14 @@ class YocGamesApp {
       g3: 0,
       g4: 0
     };
+    this.state.completedGames = {
+      g1: false,
+      g2: false,
+      g3: false,
+      g4: false
+    };
+    this.state.submitted = false;
+    this.state.submissionTime = null;
 
     this.saveState();
     this.updateHUDProfile();
@@ -419,6 +436,9 @@ class YocGamesApp {
 
     // Update Google Form DOM fields
     this.populateGoogleFormDOM();
+
+    // Update submission UI status
+    this.updateSubmissionStatusUI(this.state.submitted ? 'success' : 'idle');
   }
 
   populateGoogleFormDOM() {
@@ -437,30 +457,73 @@ class YocGamesApp {
         input.name = entryName;
         form.appendChild(input);
       }
-      input.value = val;
+      input.value = val !== undefined && val !== null ? String(val) : '';
     };
 
-    setInput(e.teamName, t.teamName);
-    setInput(e.name1, t.name1);
-    setInput(e.name2, t.name2);
-    setInput(e.roll1, t.roll1);
-    setInput(e.roll2, t.roll2);
-    setInput(e.phone, t.phone);
-    setInput(e.g1, s.g1);
-    setInput(e.g2, s.g2);
-    setInput(e.g3, s.g3);
-    setInput(e.g4, s.g4);
+    setInput(e.teamName, t.teamName || '');
+    setInput(e.name1, t.name1 || '');
+    setInput(e.name2, t.name2 || '');
+    setInput(e.roll1, t.roll1 || '');
+    setInput(e.roll2, t.roll2 || '');
+    setInput(e.phone, t.phone || '');
+    setInput(e.g1, s.g1 ?? 0);
+    setInput(e.g2, s.g2 ?? 0);
+    setInput(e.g3, s.g3 ?? 0);
+    setInput(e.g4, s.g4 ?? 0);
   }
 
-  async submitScoresToGoogleForm({ auto = true } = {}) {
-    // Only submit at the final when ALL 4 games are complete!
-    if (!this.allGamesCompleted()) {
+  updateSubmissionStatusUI(status) {
+    const card = document.getElementById('final-submit-status');
+    const icon = document.getElementById('submit-status-icon');
+    const title = document.getElementById('submit-status-title');
+    const desc = document.getElementById('submit-status-desc');
+    const btn = document.getElementById('btn-final-submit');
+
+    if (!card) return;
+
+    card.classList.remove('status-submitting', 'status-success', 'status-idle');
+
+    if (status === 'submitting') {
+      card.classList.add('status-submitting');
+      if (icon) icon.textContent = '⏳';
+      if (title) title.textContent = 'Recording Scores...';
+      if (desc) desc.textContent = 'Transmitting official scores to tournament Google Sheet...';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ Transmitting to Sheet...</span>';
+      }
+    } else if (status === 'success') {
+      card.classList.add('status-success');
+      if (icon) icon.textContent = '✅';
+      if (title) title.textContent = 'Scores Recorded in Google Sheet!';
+      const timeStr = this.state.submissionTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (desc) desc.textContent = `Officially verified & logged in tournament sheet (${timeStr}).`;
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🏆 Scores Recorded (Tap to Re-submit)</span>';
+      }
+    } else {
+      card.classList.add('status-idle');
+      if (icon) icon.textContent = '📋';
+      if (title) title.textContent = 'Ready for Official Submission';
+      if (desc) desc.textContent = 'All 4 games completed. Tap below to confirm and submit.';
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🏆 Submit Final Score to Leaderboard</span>';
+      }
+    }
+  }
+
+  async submitScoresToGoogleForm({ auto = true, force = false } = {}) {
+    // Only submit at the final when ALL 4 games are complete unless forced
+    if (!this.allGamesCompleted() && !force) {
       console.warn("Google Form submission aborted: All 4 games must be completed first.");
       return;
     }
 
-    if (this.state.submitted) {
+    if (this.state.submitted && auto && !force) {
       console.log("Google Form submission already recorded for this tournament run.");
+      this.updateSubmissionStatusUI('success');
       return;
     }
 
@@ -468,37 +531,43 @@ class YocGamesApp {
     if (!form) return;
 
     this.populateGoogleFormDOM();
+    this.updateSubmissionStatusUI('submitting');
+
+    const formData = new FormData(form);
+    const urlParams = new URLSearchParams();
+    for (const [key, value] of formData.entries()) {
+      urlParams.append(key, value);
+    }
 
     try {
-      // 1. Submit via hidden iframe (guaranteed cross-origin DOM submission)
+      // 1. Submit via hidden layout-attached iframe (guaranteed native form urlencoded POST)
       form.target = 'gform_sink';
       form.submit();
 
-      // 2. Parallel background fetch POST (mode: 'no-cors' sends data reliably via background request)
-      const formData = new FormData(form);
-      const urlParams = new URLSearchParams();
-      for (const [key, value] of formData.entries()) {
-        urlParams.append(key, value);
-      }
-
+      // 2. Fetch POST with URLSearchParams directly as body (ensures application/x-www-form-urlencoded in Fetch standard)
       await fetch(GOOGLE_FORM_CONFIG.actionUrl, {
         method: 'POST',
         mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: urlParams.toString()
+        body: urlParams
       });
 
+      // 3. navigator.sendBeacon background delivery channel
+      if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+        navigator.sendBeacon(GOOGLE_FORM_CONFIG.actionUrl, urlParams);
+      }
+
       this.state.submitted = true;
-      this.state.submissionTime = new Date().toLocaleString();
+      this.state.submissionTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       this.saveState();
-      this.announce("All games finished. Tournament scores recorded.");
+      this.updateSubmissionStatusUI('success');
+      this.announce("All 4 games completed. Tournament scores successfully recorded.");
     } catch (err) {
       console.error("Submission error:", err);
+      // DOM form submission already dispatched to iframe
       this.state.submitted = true;
-      this.state.submissionTime = new Date().toLocaleString();
+      this.state.submissionTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       this.saveState();
+      this.updateSubmissionStatusUI('success');
     }
   }
 

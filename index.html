@@ -366,8 +366,20 @@
           </div>
         </div>
 
+        <!-- Tournament Submission Status Card -->
+        <div id="final-submit-status" class="final-submit-status-card status-idle" role="status" aria-live="polite">
+          <div class="submit-status-icon" id="submit-status-icon">📋</div>
+          <div class="submit-status-info">
+            <div class="submit-status-title" id="submit-status-title">Ready for Official Submission</div>
+            <div class="submit-status-desc" id="submit-status-desc">All 4 games completed. Tap below to confirm and submit.</div>
+          </div>
+        </div>
+
         <!-- Tournament Controls Footer -->
-        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <div style="display: flex; flex-direction: column; gap: 12px; align-items: stretch; margin-top: 16px;">
+          <button class="btn btn-primary btn-glow btn-lg" id="btn-final-submit" type="button">
+            <span>🏆 Submit Final Score to Leaderboard</span>
+          </button>
           <button class="btn btn-secondary" id="btn-reset-team" type="button">
             ↻ Register New Team / Reset Arena
           </button>
@@ -382,14 +394,20 @@
        Hidden Google Form DOM & Target Iframe (From data.md)
        Used for guaranteed API submission without navigating away.
        ======================================================================== -->
-  <iframe name="gform_sink" id="gform_sink" style="display:none;" title="Google Form Sink" aria-hidden="true" tabindex="-1"></iframe>
+  <iframe 
+    name="gform_sink" 
+    id="gform_sink" 
+    style="position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; opacity:0.01; pointer-events:none; border:none;" 
+    title="Google Form Sink" 
+    aria-hidden="true" 
+    tabindex="-1"></iframe>
 
   <form 
-    action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSf42vQBG3sz8M6FqKmtp1c6cicpbz0e2g6KVANuGanOypBCww/formResponse" 
+    action="https://docs.google.com/forms/d/e/1FAIpQLSf42vQBG3sz8M6FqKmtp1c6cicpbz0e2g6KVANuGanOypBCww/formResponse" 
     target="gform_sink" 
     method="POST" 
     id="mG61Hd" 
-    style="display:none;" 
+    style="position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; opacity:0.01; pointer-events:none; border:none;" 
     aria-hidden="true"
     tabindex="-1">
     

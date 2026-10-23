@@ -4,7 +4,7 @@
  * and submits live to the Google Forms API endpoint from data.md.
  */
 
-const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSf42vQBG3sz8M6FqKmtp1c6cicpbz0e2g6KVANuGanOypBCww/formResponse";
+const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/e/1FAIpQLSf42vQBG3sz8M6FqKmtp1c6cicpbz0e2g6KVANuGanOypBCww/formResponse";
 
 const testPayload = {
   "entry.2005620554": "Test Squad Alpha",     // team name
