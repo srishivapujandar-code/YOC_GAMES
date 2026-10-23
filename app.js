@@ -46,7 +46,11 @@ class YocGamesApp {
     try {
       const saved = localStorage.getItem('yoc_games_active_state');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (!parsed.completedGames) {
+          parsed.completedGames = { g1: false, g2: false, g3: false, g4: false };
+        }
+        return parsed;
       }
     } catch (e) {
       console.warn("Storage load error:", e);
@@ -68,10 +72,21 @@ class YocGamesApp {
         g3: 0,
         g4: 0
       },
+      completedGames: {
+        g1: false,
+        g2: false,
+        g3: false,
+        g4: false
+      },
       submitted: false,
       submissionTime: null,
       currentScreen: 'screen-registration'
     };
+  }
+
+  allGamesCompleted() {
+    const c = this.state.completedGames;
+    return Boolean(c && c.g1 && c.g2 && c.g3 && c.g4);
   }
 
   saveState() {
@@ -145,15 +160,14 @@ class YocGamesApp {
           alert("Please enter team registration details and click Start to Play first.");
           return;
         }
+        if (screenId === 'screen-final' && !this.allGamesCompleted()) {
+          sound.playInvalid();
+          alert("Please complete Game 1, Game 2, Game 3, and Game 4 before accessing the Final Scoreboard!");
+          return;
+        }
         this.navigateTo(screenId);
       });
     });
-
-    // Google Form API Submit Button on Final Screen
-    const btnSubmitApi = document.getElementById('btn-submit-google-form');
-    if (btnSubmitApi) {
-      btnSubmitApi.addEventListener('click', () => this.submitScoresToGoogleForm());
-    }
 
     // Reset Tournament / Register New Team
     const btnNewTeam = document.getElementById('btn-reset-team');
@@ -282,6 +296,7 @@ class YocGamesApp {
         },
         onComplete: (finalG1Score) => {
           this.state.scores.g1 = finalG1Score;
+          this.state.completedGames.g1 = true;
           this.updateHUDScoreStrip();
           this.saveState();
           if (this.confetti) this.confetti.burst(150);
@@ -301,6 +316,7 @@ class YocGamesApp {
         },
         onComplete: (finalG2Score) => {
           this.state.scores.g2 = finalG2Score;
+          this.state.completedGames.g2 = true;
           this.updateHUDScoreStrip();
           this.saveState();
           if (this.confetti) this.confetti.burst(150);
@@ -320,6 +336,7 @@ class YocGamesApp {
         },
         onComplete: (finalG3Marks) => {
           this.state.scores.g3 = finalG3Marks;
+          this.state.completedGames.g3 = true;
           this.updateHUDScoreStrip();
           this.saveState();
           if (this.confetti) this.confetti.burst(150);
@@ -339,6 +356,7 @@ class YocGamesApp {
         },
         onComplete: (finalG4Score) => {
           this.state.scores.g4 = finalG4Score;
+          this.state.completedGames.g4 = true;
           this.updateHUDScoreStrip();
           this.saveState();
           if (this.confetti) this.confetti.burst(200);
@@ -350,10 +368,12 @@ class YocGamesApp {
     } else if (screenId === 'screen-final') {
       this.populateFinalScreen();
       if (this.confetti) this.confetti.burst(180);
-      // Auto-submit final tournament data into Google Form automatically
-      setTimeout(() => {
-        this.submitScoresToGoogleForm({ auto: true });
-      }, 500);
+      // Strictly only submit at the final when ALL 4 games are complete!
+      if (this.allGamesCompleted() && !this.state.submitted) {
+        setTimeout(() => {
+          this.submitScoresToGoogleForm({ auto: true });
+        }, 500);
+      }
     }
   }
 
@@ -381,17 +401,6 @@ class YocGamesApp {
 
     // Update Google Form DOM fields
     this.populateGoogleFormDOM();
-
-    // Check submission status
-    const statusBox = document.getElementById('submission-status-box');
-    if (this.state.submitted) {
-      statusBox.innerHTML = `
-        <div class="submission-status-badge text-success">
-          <span>✓ Responses successfully recorded in Google Form!</span>
-        </div>
-        <p class="text-sm text-muted" style="margin-top:6px;">Recorded on: ${this.state.submissionTime}</p>
-      `;
-    }
   }
 
   populateGoogleFormDOM() {
@@ -425,27 +434,21 @@ class YocGamesApp {
     setInput(e.g4, s.g4);
   }
 
-  async submitScoresToGoogleForm({ auto = false } = {}) {
-    const btn = document.getElementById('btn-submit-google-form');
-    const statusBox = document.getElementById('submission-status-box');
-    const form = document.getElementById('mG61Hd');
+  async submitScoresToGoogleForm({ auto = true } = {}) {
+    // Only submit at the final when ALL 4 games are complete!
+    if (!this.allGamesCompleted()) {
+      console.warn("Google Form submission aborted: All 4 games must be completed first.");
+      return;
+    }
 
+    if (this.state.submitted) {
+      console.log("Google Form submission already recorded for this tournament run.");
+      return;
+    }
+
+    const form = document.getElementById('mG61Hd');
     if (!form) return;
 
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = `<span>${auto ? 'Auto-submitting...' : 'Transmitting to Google Form...'}</span> ⏳`;
-    }
-
-    if (statusBox) {
-      statusBox.innerHTML = `
-        <div class="submission-status-badge auto-submitting">
-          <span>⏳ ${auto ? 'Automatically submitting' : 'Submitting'} tournament scores to Google Form...</span>
-        </div>
-      `;
-    }
-
-    if (!auto) sound.playClick();
     this.populateGoogleFormDOM();
 
     try {
@@ -453,7 +456,7 @@ class YocGamesApp {
       form.target = 'gform_sink';
       form.submit();
 
-      // 2. Fallback fetch POST (mode: 'no-cors' sends data reliably via background request)
+      // 2. Parallel background fetch POST (mode: 'no-cors' sends data reliably via background request)
       const formData = new FormData(form);
       const urlParams = new URLSearchParams();
       for (const [key, value] of formData.entries()) {
@@ -472,43 +475,12 @@ class YocGamesApp {
       this.state.submitted = true;
       this.state.submissionTime = new Date().toLocaleString();
       this.saveState();
-
-      sound.playVictory();
-      if (this.confetti) this.confetti.burst(200);
-
-      if (btn) {
-        btn.disabled = false;
-        btn.className = 'btn btn-secondary full-width';
-        btn.innerHTML = `<span>↻ Re-Submit / Sync with Google Form</span>`;
-      }
-
-      if (statusBox) {
-        statusBox.innerHTML = `
-          <div class="submission-status-badge text-success">
-            <span>✓ Automatically submitted and recorded in Google Form!</span>
-          </div>
-          <p class="text-sm text-muted" style="margin-top:6px;">Timestamp: ${this.state.submissionTime}</p>
-        `;
-      }
-
-      this.announce("Scores automatically submitted and recorded in Google Forms database.");
+      this.announce("All games finished. Tournament scores recorded.");
     } catch (err) {
       console.error("Submission error:", err);
       this.state.submitted = true;
       this.state.submissionTime = new Date().toLocaleString();
       this.saveState();
-
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = `<span>↻ Re-Submit / Sync with Google Form</span>`;
-      }
-      if (statusBox) {
-        statusBox.innerHTML = `
-          <div class="submission-status-badge text-success">
-            <span>✓ Data sent to Google Forms handler.</span>
-          </div>
-        `;
-      }
     }
   }
 
@@ -523,6 +495,7 @@ class YocGamesApp {
       registered: false,
       team: { teamName: '', name1: '', name2: '', roll1: '', roll2: '', phone: '' },
       scores: { g1: 0, g2: 0, g3: 0, g4: 0 },
+      completedGames: { g1: false, g2: false, g3: false, g4: false },
       submitted: false,
       submissionTime: null,
       currentScreen: 'screen-registration'

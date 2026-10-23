@@ -116,7 +116,7 @@
         🎯 <span>Game 4: Number Rush</span>
       </button>
       <button class="station-tab" data-screen="screen-final" type="button">
-        🏆 <span>Final Score & Submit</span>
+        🏆 <span>Final Scoreboard</span>
       </button>
     </div>
   </nav>
@@ -365,25 +365,13 @@
           </div>
         </div>
 
-        <!-- Google Form API Auto-Submission Section -->
-        <div class="submit-api-box" id="submit-api-panel">
-          <div class="api-box-header">
-            <span class="api-tag">⚡ GOOGLE FORM INTEGRATION</span>
-            <h3 style="margin-top: 6px;">Automatic Form Submission</h3>
-            <p class="text-sm text-muted" style="margin: 6px 0 14px;">
-              Your team credentials and game scores (team name, name1, name2, roll no1, roll no2, phone no1, g1, g2, g3, g4) are automatically submitted to the Google Form database.
-            </p>
+        <!-- Tournament Completion Status Banner -->
+        <div class="tournament-finish-banner">
+          <div class="finish-badge-icon" aria-hidden="true">🏆</div>
+          <div class="finish-badge-content">
+            <h3>Tournament Completed!</h3>
+            <p class="text-sm text-muted">All 4 game stations successfully finished. Final tournament results officially locked and recorded.</p>
           </div>
-
-          <div id="submission-status-box" role="status" aria-live="polite">
-            <div class="submission-status-badge auto-submitting">
-              <span>⏳ Auto-submitting tournament scores to Google Form...</span>
-            </div>
-          </div>
-
-          <button class="btn btn-secondary full-width" id="btn-submit-google-form" type="button" style="margin-top: 14px;">
-            <span>↻ Re-Submit / Sync with Google Form</span>
-          </button>
         </div>
 
         <!-- Tournament Controls Footer -->
